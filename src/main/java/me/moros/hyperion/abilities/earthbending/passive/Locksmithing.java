@@ -48,6 +48,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Locksmithing extends MetalAbility implements AddonAbility, PassiveAbility {
 	private static final String OVERRIDE = "bending.admin.overridelock";
+	private static final String REGIONPROTECTLOCKABLE = "Abilities.Earth.LockSmithing.IsLockableRegionProtected";
 	private static final ChatColor[] COLORS = Arrays.stream(ChatColor.values()).filter(ChatColor::isColor).toArray(ChatColor[]::new);
 	private static CoreAbility instance;
 
@@ -111,6 +112,13 @@ public class Locksmithing extends MetalAbility implements AddonAbility, PassiveA
 	}
 
 	public static boolean canBreak(Player player, Lockable container) {
+		//If using region protection logic and the block is not protected allow any player to break the locked block.
+		if (isLockableRegionProtected() && container instanceof BlockState blockState) {
+			Location loc = blockState.getLocation();
+			if (null != loc && !RegionProtection.isRegionProtected(player, loc)) {
+				 return true;
+			}
+		}
 		if (!container.isLocked() || player.hasPermission(OVERRIDE)) {
 			return true;
 		}
@@ -139,6 +147,10 @@ public class Locksmithing extends MetalAbility implements AddonAbility, PassiveA
 	@Override
 	public boolean isEnabled() {
 		return Hyperion.getPlugin().getConfig().getBoolean("Abilities.Earth.LockSmithing.Enabled");
+	}
+
+	public boolean isLockableRegionProtected() {
+		return Hyperion.getPlugin().getConfig().getBoolean(REGIONPROTECTLOCKABLE);
 	}
 
 	@Override
